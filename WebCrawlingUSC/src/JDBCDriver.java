@@ -56,7 +56,6 @@ public class JDBCDriver {
 			sql = "SELECT * FROM Course WHERE major= " + "'" 
 					+ course.getMajor() + "' AND number='" + course.getNumber() + "'";
 			rs = stmt.executeQuery(sql);
-			// rs.next();
 			// Check whether the course has been stored
 			if (!rs.next()) {
 				sql = course.insertDBString();
@@ -65,6 +64,7 @@ public class JDBCDriver {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(sql);
+			System.exit(3);
 		}
 	}
 
@@ -106,6 +106,7 @@ public class JDBCDriver {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(sql);
+			System.exit(2);
 		}
 	}
 

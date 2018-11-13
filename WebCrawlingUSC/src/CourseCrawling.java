@@ -10,7 +10,7 @@ import java.util.List;
 
 public class CourseCrawling {
 	
-	private static final int TIMEOUT = 2000000, SLEEPTIME = 100;
+	private static final int TIMEOUT = 2000000, SLEEPTIME = 10;
 	private List<String> courseLinks, names, schools;
 	private String currentSchool = "";
 	
@@ -77,7 +77,7 @@ public class CourseCrawling {
 									line.indexOf("\",\"longitude\":\"")
 								));
 							JDBCDriver.addBuilding(new BuildingCandidate(id, fullName, address, longitude, latitude));
-							System.out.println(id);
+							// System.out.println(id);
 						}
 					}
 				}
@@ -163,7 +163,7 @@ public class CourseCrawling {
 
 	private void addSectionToDB(String line, String major, int courseID) {
 		if (courseID < 0) return;
-		System.out.println("Requesting data for course sections...");
+		System.out.println("\t\t\t\tRequesting data for course sections...");
 		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
 		List<SectionCandidate> sections = new ArrayList<>();
 		List<SectionCandidate> lectures = new ArrayList<>();
@@ -180,7 +180,7 @@ public class CourseCrawling {
 			// Process days
 			String days = processDays(getInnerHTMLByClassName(tmp, "days").toUpperCase());
 			// Process instructor
-			String instructor = processInstructor(getInnerHTMLByClassName(tmp, "time"));
+			String instructor = processInstructor(getInnerHTMLByClassName(tmp, "instructor"));
 			// Process class capacity
 			String classCapacityString = getInnerHTMLByClassName(tmp, "registered");
 			classCapacityString = classCapacityString.substring(classCapacityString.indexOf("of ") + 3);
@@ -201,7 +201,7 @@ public class CourseCrawling {
 		}
 		
 		// Write data into DB
-		System.out.println("Writing data into DB for course sections...");
+		System.out.println("\t\t\t\tWriting data into DB for course sections...");
 		for (int i = 0; i < lectures.size(); i++) {
 			JDBCDriver.addSection(lectures.get(i));
 		}
@@ -218,14 +218,16 @@ public class CourseCrawling {
 	
 	private String processInstructor(String innerHTML) {
 		if (innerHTML.contains("<a href=")) {
-			innerHTML = innerHTML.substring(innerHTML.indexOf(">") + 1, innerHTML.indexOf("</"));
+			// System.out.println(innerHTML);
+			innerHTML = innerHTML.substring(innerHTML.indexOf("\">") + 2, innerHTML.indexOf("</"));
 		}
+		if (innerHTML.contains(",")) innerHTML = innerHTML.substring(0, innerHTML.indexOf(","));
 		return innerHTML;
 	}
 
 	private String[] processTime(String time) {
 		
-		if (time.contains("TBA")) return new String[] {"23:58", "23:59"};
+		if (time.contains("TBA") || time.length() <= 0) return new String[] {"23:58", "23:59"};
 		
 		String start_time = time.substring(0, time.indexOf("-"));
 		String end_time = time.substring(time.indexOf("-") + 1, time.length() - 2);
@@ -325,14 +327,7 @@ public class CourseCrawling {
 						if (!newLine.contains("disabled") 
 								&& !newLine.contains("Graduate Studies")
 								&& !newLine.contains("Nursing")
-								&& !newLine.contains("Category A")
-								&& !newLine.contains("Category B")
-								&& !newLine.contains("Category C")
-								&& !newLine.contains("Category D")
-								&& !newLine.contains("Category E")
-								&& !newLine.contains("Category F")
-								&& !newLine.contains("Category G")
-								&& !newLine.contains("Category H")) {
+								&& !newLine.contains("Category ")) {
 							// Process abbreviation and course name
 							startIndex = newLine.indexOf("value=\"") + (new String("value=\"")).length();
 							endIndex = newLine.indexOf("\">- ");
