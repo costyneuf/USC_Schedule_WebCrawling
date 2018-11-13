@@ -1,5 +1,5 @@
 
-public class SectionCandidate {
+public class Section {
 	
 	/*
 	 *    Lecture Section
@@ -30,23 +30,24 @@ public class SectionCandidate {
 	
 	private String sectionID, type;
 	// 24 hour format -- MTWHF
-	private String start_time, end_time, day;
-	private String instructor, building_ID, lectureSection_ID="";
-	private int numRegistered, classCapacity, course_ID;
+	private String startTime, endTime, day;
+	private String instructor, buildingID, lectureSection_ID="";
+	private int numRegistered, classCapacity; 
+	private String courseID;
 	
-	public SectionCandidate(String sectionID, String type, String start_time, String end_time, String day,
+	public Section(String sectionID, String type, String start_time, String end_time, String day,
 			String instructor, String building_ID, int classCapacity, int course_ID) {
 
 		this.sectionID = sectionID;
 		this.type = type;
-		this.start_time = start_time;
-		this.end_time = end_time;
+		this.startTime = start_time;
+		this.endTime = end_time;
 		this.day = day;
 		this.instructor = instructor;
-		this.building_ID = building_ID;
+		this.buildingID = building_ID;
 		this.numRegistered = 0;
 		this.classCapacity = classCapacity;
-		this.course_ID = course_ID;
+		this.courseID = Integer.toString(course_ID);
 	}
 
 	public String getType() {
@@ -77,14 +78,14 @@ public class SectionCandidate {
 		
 		base += "\"" + sectionID + "\", ";
 		base += "\"" + type + "\", ";
-		base += "\"" + start_time + "\", ";
-		base += "\"" + end_time + "\", ";
+		base += "\"" + startTime + "\", ";
+		base += "\"" + endTime + "\", ";
 		base += "\"" + day + "\", ";
 		base += "\"" + instructor + "\", ";
 		base += numRegistered + ", ";
 		base += classCapacity + ", ";
-		base += "\"" + building_ID + "\", ";
-		base += course_ID;
+		base += "\"" + buildingID + "\", ";
+		base += courseID;
 		base += type.toLowerCase().equals("lecture") ? ");" : ", \"" + lectureSection_ID + "\");";
 		
 		return base;

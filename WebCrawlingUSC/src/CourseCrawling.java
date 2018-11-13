@@ -165,8 +165,8 @@ public class CourseCrawling {
 		if (courseID < 0) return;
 		System.out.println("\t\t\t\tRequesting data for course sections...");
 		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
-		List<SectionCandidate> sections = new ArrayList<>();
-		List<SectionCandidate> lectures = new ArrayList<>();
+		List<Section> sections = new ArrayList<>();
+		List<Section> lectures = new ArrayList<>();
 		// Assume all labs, discussions, and quizzes can be binded with all lectures.
 		List<String> lectureSection_IDs = new ArrayList<>();
 		while (line.contains(startLocation)) {
@@ -188,7 +188,7 @@ public class CourseCrawling {
 			int classCapacity = classCapacityString.contains(":") || classCapacityString.contains(" ") ? 0 : Integer.parseInt(classCapacityString);
 			String building_ID = tmp.contains("\"map\"") ? getInnerHTMLByClassName(tmp, "map").substring(0,3) : "TBA";
 			
-			SectionCandidate section = new SectionCandidate(sectionID, type, times[0], times[1], days,
+			Section section = new Section(sectionID, type, times[0], times[1], days,
 					instructor, building_ID, classCapacity, courseID);
 			// Add lecture id
 			if (section.isLecture()) {
@@ -206,7 +206,7 @@ public class CourseCrawling {
 			JDBCDriver.addSection(lectures.get(i));
 		}
 		for (int i = 0; i < sections.size(); i++) {
-			SectionCandidate section = sections.get(i);
+			Section section = sections.get(i);
 			if (!section.isLecture()) {
 				for (int j = 0; j < lectureSection_IDs.size(); j++)
 					section.setLectureSection_ID(lectureSection_IDs.get(j));

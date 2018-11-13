@@ -88,7 +88,7 @@ public class JDBCDriver {
 		}
 	}
 	
-	public static void addSection(SectionCandidate section) {
+	public static void addSection(Section section) {
 		if (conn == null)
 			return;
 		String sql = "";
