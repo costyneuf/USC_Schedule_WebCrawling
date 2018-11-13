@@ -15,12 +15,12 @@ public class CourseCandidate {
 	private float units;
 	private int semester;
 	
-	private static final int MAX_SCHOOL = 45, MAX_MAJOR = 45, MAX_NAME = 100;
+	private static final int MAX_MAJOR = 45, MAX_NAME = 100;
 	
 	private static final int DEFAULT_SEMESTER = 1;
 
 	public CourseCandidate(String school, String major) {
-		if (school.length() > MAX_SCHOOL) school = school.substring(0, school.indexOf(" "));
+		if (school.contains(" ")) school = school.substring(0, school.indexOf(" "));
 		this.school = school;
 		if (major.length() > MAX_MAJOR) major = major.substring(0, MAX_MAJOR);
 		this.major = major;

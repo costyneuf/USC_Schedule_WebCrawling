@@ -1,8 +1,37 @@
 
 public class SectionCandidate {
 	
-	private String sectionID, type, start_time, end_time, day, 
-		instructor, building_ID;
+	/*
+	 *    Lecture Section
+	      `sectionID` VARCHAR(45) NOT NULL,
+  		  `type` VARCHAR(45) NULL,
+		  `start_time` VARCHAR(45) NULL,
+		  `end_time` VARCHAR(45) NULL,
+		  `day` VARCHAR(45) NULL,
+		  `instructor` VARCHAR(45) NULL,
+		  `numRegistered` INT(4) NULL,
+		  `classCapacity` INT(4) NULL,
+		  `Building_ID` VARCHAR(4) NULL,
+		  `Course_ID` INT(11) NOT NULL,
+		  
+		  Lab/Quiz/Discussion Section
+		  `sectionID` VARCHAR(45) NOT NULL,
+		  `type` VARCHAR(45) NULL,
+		  `start_time` VARCHAR(45) NULL,
+		  `end_time` VARCHAR(45) NULL,
+		  `day` VARCHAR(45) NULL,
+		  `instructor` VARCHAR(45) NULL,
+		  `numRegistered` INT(4) NULL,
+		  `classCapacity` INT(4) NULL,
+		  `Building_ID` VARCHAR(4) NOT NULL,
+		  `Course_ID` INT(11) NOT NULL,
+		  `Lecture_SectionID` VARCHAR(45) NOT NULL,
+	 */
+	
+	private String sectionID, type;
+	// 24 hour format -- MTWHF
+	private String start_time, end_time, day;
+	private String instructor, building_ID, lectureSection_ID="";
 	private int numRegistered, classCapacity, course_ID;
 	
 	public SectionCandidate(String sectionID, String type, String start_time, String end_time, String day,
@@ -24,27 +53,30 @@ public class SectionCandidate {
 		return type;
 	}
 	
+	public void setLectureSection_ID(String lectureSection_ID) {
+		this.lectureSection_ID = lectureSection_ID;
+	}
+	
 	public String insertDBString() {
 		
-//		if (number == null || name == null || description == null)
-//			return null;
-//		
-//		String base = "INSERT INTO `scheduling`.`Course` ("
-//				+ "`school`, `major`, `number`, `units`, `name`, "
-//				+ "`description`, `semester`)\n\tVALUES (";
-//		school = school.replace('"', '\'');
-//		base += "\"" + school + "\", ";
-//		base += "\"" + major + "\", ";
-//		base += "\"" + number + "\", ";
-//		base += units + ", ";
-//		name = name.replace('"', '\'');
-//		base += "\"" + name + "\", ";
-//		description = description.replace("\"", "'");
-//		base += "\"" + description + "\", ";
-//		base += semester + ");";
-//		
-//		return base;
+		String base = "INSERT INTO `scheduling`.`" + type + "_Sections` ("
+				+ "`sectionID`, `type`, `start_time`, `end_time`, `day`, "
+				+ "`instructor`, `numRegistered`, `classCapacity`, `Building_ID`, "
+				+ "`Course_ID`" + (type.toLowerCase().equals("lecture") ? "" : ", `Lecture_SectionID`") 
+				+ ")\n\tVALUES (";
 		
-		return null;
+		base += "\"" + sectionID + "\", ";
+		base += "\"" + type + "\", ";
+		base += "\"" + start_time + "\", ";
+		base += "\"" + end_time + "\", ";
+		base += "\"" + day + "\", ";
+		base += "\"" + instructor + "\", ";
+		base += numRegistered + ", ";
+		base += classCapacity + ", ";
+		base += "\"" + building_ID + "\", ";
+		base += course_ID;
+		base += type.toLowerCase().equals("lecture") ? ");" : ", \"" + lectureSection_ID + "\");";
+		
+		return base;
 	}
 }

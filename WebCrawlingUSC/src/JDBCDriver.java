@@ -92,6 +92,26 @@ public class JDBCDriver {
 	public static void addSection(SectionCandidate section) {
 		
 	}
+
+	public static int getCourseId(CourseCandidate course) {
+		if (conn == null) return -1;
+		int ID = -1;
+		String sql = "";
+		try {
+			stmt = conn.createStatement();
+			sql = "SELECT * FROM Course WHERE major= " + "'" 
+					+ course.getMajor() + "' AND number='" + course.getNumber() + "'";
+			rs = stmt.executeQuery(sql);
+			if (rs.next()) {
+				ID = Integer.parseInt(rs.getString("ID"));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println(sql);
+		}
+		
+		return ID;
+	}
 	
 
 }

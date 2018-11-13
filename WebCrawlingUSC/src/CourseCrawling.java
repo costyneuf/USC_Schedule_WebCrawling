@@ -151,13 +151,40 @@ public class CourseCrawling {
 			line = line.substring(endIndex);
 					
 			// Update each course under given {@code major}
-			addCourseToDB(newLine, school, major);
-			// TODO Process section for each course 
+			int courseID = addCourseToDB(newLine, school, major);
+			// Process section for each course 
+			addSectionToDB(newLine, major, courseID);
 			
 		}	
 	}
 
-	private void addCourseToDB(String line, String school, String major) {
+	private void addSectionToDB(String line, String major, int courseID) {
+		if (courseID < 0) return;
+		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
+		while (line.contains(startLocation)) {
+			String tmp = line.substring(line.indexOf(startLocation), line.indexOf(endLocation));
+			line = line.substring(line.indexOf(endLocation));
+			String sectionID = tmp.substring(tmp.indexOf("\"section\">")+10, tmp.indexOf("</td><td class=\"session\">"));
+			String type = tmp.substring(tmp.indexOf("\"type\">")+7, tmp.indexOf("</td><td class=\"time\">"));
+			// TODO Process time {[x]x:xx-[x]x:xx(a/p)m}
+			String time = tmp.substring(tmp.indexOf("\"time\">")+7, tmp.indexOf("</td><td class=\"days\">"));
+			String days = tmp.substring(tmp.indexOf("\"days\">")+7, tmp.indexOf("</td><td class=\"registered\">"));
+			days = processDays(days.toUpperCase());
+			
+		}
+		
+	}
+
+	private String processDays(String days) {
+		String result = "";
+		char[] symbols = {'M', 'T', 'W', 'H', 'F'};
+		for (int i = 0; i < symbols.length; i++) {
+			result += days.indexOf(symbols[i]) < 0 ? "" : symbols[i];
+		}
+		return result;
+	}
+
+	private int addCourseToDB(String line, String school, String major) {
 
 		CourseCandidate course = new CourseCandidate(school, major);
 		
@@ -189,6 +216,8 @@ public class CourseCrawling {
 		
 		// Insert into database
 		JDBCDriver.addCourse(course);
+		
+		return JDBCDriver.getCourseId(course);
 	}
 
 	/**
