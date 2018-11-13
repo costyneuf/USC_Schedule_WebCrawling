@@ -48,7 +48,7 @@ public class CourseCrawling {
 				// Process building info.
 				String startLocation = "\"code\":";
 				while (line.contains(startLocation)) {
-					if (line.contains("\"code\":null")) {
+					if (line.indexOf("\"code\":null") >= 0 && line.indexOf("\"code\":null") < line.indexOf(startLocation)) {
 						line = line.substring(line.indexOf("\"code\":null") 
 								+ (new String("\"code\":null")).length());
 					} else {
@@ -67,7 +67,7 @@ public class CourseCrawling {
 									line.indexOf("\",\"short\":\""));
 							String address = line.substring(line.indexOf("\"address\":\"") + (new String("\"address\":\"")).length(),
 									line.indexOf("\",\"accessMap\":\""));
-						if (id.length() > 0) {
+						if (id.length() == 3) {
 							float longitude = Float.parseFloat(line.substring(
 										line.indexOf("\"longitude\":\"") + (new String("\"longitude\":\"")).length(),
 										line.indexOf("\",\"photo\":")
@@ -77,9 +77,12 @@ public class CourseCrawling {
 									line.indexOf("\",\"longitude\":\"")
 								));
 							JDBCDriver.addBuilding(new BuildingCandidate(id, fullName, address, longitude, latitude));
+							System.out.println(id);
 						}
 					}
 				}
+				// Add TBA
+				JDBCDriver.addBuilding(new BuildingCandidate("TBA", "TBA", "TBA"));
 				System.out.println("Finish adding buildings!");
 				
 			}
@@ -160,15 +163,17 @@ public class CourseCrawling {
 
 	private void addSectionToDB(String line, String major, int courseID) {
 		if (courseID < 0) return;
+		System.out.println("Requesting data for course sections...");
 		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
 		List<SectionCandidate> sections = new ArrayList<>();
 		// Assume all labs, discussions, and quizzes can be binded with all lectures.
 		List<String> lectureSection_IDs = new ArrayList<>();
 		while (line.contains(startLocation)) {
-			String tmp = line.substring(line.indexOf(startLocation), line.indexOf(endLocation));
-			line = line.substring(line.indexOf(endLocation));
+			String tmp = line.substring(line.indexOf(startLocation));
+			line = tmp.substring(tmp.indexOf(endLocation));
 			String sectionID = getInnerHTMLByClassName(tmp, "section");
 			String type = getInnerHTMLByClassName(tmp, "type");
+			if (type.contains("Lecture")) type = "Lecture";
 			// Process time {[x]x:xx-[x]x:xx(a/p)m}
 			String[] times = processTime(getInnerHTMLByClassName(tmp, "time"));	
 			// Process days
@@ -180,9 +185,26 @@ public class CourseCrawling {
 			classCapacityString = classCapacityString.substring(classCapacityString.indexOf("of ") + 3);
 			classCapacityString = classCapacityString.substring(0, classCapacityString.indexOf("<"));
 			int classCapacity = Integer.parseInt(classCapacityString);
-			String building_ID = getInnerHTMLByClassName(tmp, "map");
-			sections.add(new SectionCandidate(sectionID, type, times[0], times[1], days,
-					instructor, building_ID, classCapacity, courseID));
+			String building_ID = tmp.contains("\"map\"") ? getInnerHTMLByClassName(tmp, "map").substring(0,3) : "TBA";
+			// Add a new section object
+			SectionCandidate section = new SectionCandidate(sectionID, type, times[0], times[1], days,
+					instructor, building_ID, classCapacity, courseID);
+			sections.add(section);
+			// Add lecture id
+			if (section.isLecture()) {
+				lectureSection_IDs.add(sectionID);
+			}
+		}
+		
+		// Write data into DB
+		System.out.println("Writing data into DB for course sections...");
+		for (int i = 0; i < sections.size(); i++) {
+			SectionCandidate section = sections.get(i);
+			if (!section.isLecture()) {
+				for (int j = 0; j < lectureSection_IDs.size(); j++)
+					section.setLectureSection_ID(lectureSection_IDs.get(j));
+			}
+			JDBCDriver.addSection(section);
 		}
 		
 	}
@@ -195,6 +217,9 @@ public class CourseCrawling {
 	}
 
 	private String[] processTime(String time) {
+		
+		if (time.contains("TBA")) return new String[] {"23:58", "23:59"};
+		
 		String start_time = time.substring(0, time.indexOf("-"));
 		String end_time = time.substring(time.indexOf("-") + 1, time.length() - 2);
 		if (time.substring(time.length() - 2).contains("p")) {
@@ -211,13 +236,18 @@ public class CourseCrawling {
 	}
 
 	private String getInnerHTMLByClassName(String line, String className) {
-		String startLocation = "<td class=\"" + className + "\">";
+		System.out.print("Processing " + className + ":\t");
+		String startLocation = "class=\"" + className + "\">";
 		line = line.substring(line.indexOf(startLocation));
 		line = line.substring(0, line.indexOf("</td"));
-		return line.substring(line.indexOf(">"));
+		System.out.println(line.substring(line.indexOf(">") + 1));
+		
+		return line.substring(line.indexOf(">") + 1);
+		
 	}
 
 	private String processDays(String days) {
+		if (days.contains("TBA")) return "MTWHF";
 		String result = "";
 		char[] symbols = {'M', 'T', 'W', 'H', 'F'};
 		for (int i = 0; i < symbols.length; i++) {

@@ -78,7 +78,7 @@ public class JDBCDriver {
 					+ building.getID() + "'";
 			rs = stmt.executeQuery(sql);
 			// rs.next();
-			// Check whether the course has been stored
+			// Check whether the building has been stored
 			if (!rs.next()) {
 				sql = building.insertDBString();
 				stmt.executeUpdate(sql);
@@ -90,7 +90,23 @@ public class JDBCDriver {
 	}
 	
 	public static void addSection(SectionCandidate section) {
-		
+		if (conn == null)
+			return;
+		String sql = "";
+		try {
+			stmt = conn.createStatement();
+			sql = section.getSelectDBString();
+			rs = stmt.executeQuery(sql);
+			// rs.next();
+			// Check whether the section has been stored
+			if (!rs.next()) {
+				sql = section.insertDBString();
+				stmt.executeUpdate(sql);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println(sql);
+		}
 	}
 
 	public static int getCourseId(CourseCandidate course) {

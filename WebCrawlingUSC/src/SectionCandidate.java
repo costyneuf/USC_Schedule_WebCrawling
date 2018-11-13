@@ -58,6 +58,15 @@ public class SectionCandidate {
 			this.lectureSection_ID = lectureSection_ID;
 	}
 	
+	public String getSelectDBString() {
+		return "SELECT * FROM " + type + "_Sections WHERE sectionID= " + "'" 
+				+ sectionID + (isLecture() ? "'" : "' AND Lecture_SectionID='" + lectureSection_ID + "'");
+	}
+	
+	public boolean isLecture() {
+		return type.toLowerCase().equals("lecture");
+	}
+	
 	public String insertDBString() {
 		
 		String base = "INSERT INTO `scheduling`.`" + type + "_Sections` ("
