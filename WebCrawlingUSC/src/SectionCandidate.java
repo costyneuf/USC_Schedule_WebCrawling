@@ -54,7 +54,8 @@ public class SectionCandidate {
 	}
 	
 	public void setLectureSection_ID(String lectureSection_ID) {
-		this.lectureSection_ID = lectureSection_ID;
+		if (!this.type.toLowerCase().equals("lecture"))
+			this.lectureSection_ID = lectureSection_ID;
 	}
 	
 	public String insertDBString() {

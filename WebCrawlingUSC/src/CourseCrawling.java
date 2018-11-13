@@ -161,18 +161,60 @@ public class CourseCrawling {
 	private void addSectionToDB(String line, String major, int courseID) {
 		if (courseID < 0) return;
 		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
+		List<SectionCandidate> sections = new ArrayList<>();
+		// Assume all labs, discussions, and quizzes can be binded with all lectures.
+		List<String> lectureSection_IDs = new ArrayList<>();
 		while (line.contains(startLocation)) {
 			String tmp = line.substring(line.indexOf(startLocation), line.indexOf(endLocation));
 			line = line.substring(line.indexOf(endLocation));
-			String sectionID = tmp.substring(tmp.indexOf("\"section\">")+10, tmp.indexOf("</td><td class=\"session\">"));
-			String type = tmp.substring(tmp.indexOf("\"type\">")+7, tmp.indexOf("</td><td class=\"time\">"));
-			// TODO Process time {[x]x:xx-[x]x:xx(a/p)m}
-			String time = tmp.substring(tmp.indexOf("\"time\">")+7, tmp.indexOf("</td><td class=\"days\">"));
-			String days = tmp.substring(tmp.indexOf("\"days\">")+7, tmp.indexOf("</td><td class=\"registered\">"));
-			days = processDays(days.toUpperCase());
-			
+			String sectionID = getInnerHTMLByClassName(tmp, "section");
+			String type = getInnerHTMLByClassName(tmp, "type");
+			// Process time {[x]x:xx-[x]x:xx(a/p)m}
+			String[] times = processTime(getInnerHTMLByClassName(tmp, "time"));	
+			// Process days
+			String days = processDays(getInnerHTMLByClassName(tmp, "days").toUpperCase());
+			// Process instructor
+			String instructor = processInstructor(getInnerHTMLByClassName(tmp, "time"));
+			// Process class capacity
+			String classCapacityString = getInnerHTMLByClassName(tmp, "registered");
+			classCapacityString = classCapacityString.substring(classCapacityString.indexOf("of ") + 3);
+			classCapacityString = classCapacityString.substring(0, classCapacityString.indexOf("<"));
+			int classCapacity = Integer.parseInt(classCapacityString);
+			String building_ID = getInnerHTMLByClassName(tmp, "map");
+			sections.add(new SectionCandidate(sectionID, type, times[0], times[1], days,
+					instructor, building_ID, classCapacity, courseID));
 		}
 		
+	}
+	
+	private String processInstructor(String innerHTML) {
+		if (innerHTML.contains("<a href=")) {
+			innerHTML = innerHTML.substring(innerHTML.indexOf(">") + 1, innerHTML.indexOf("</"));
+		}
+		return innerHTML;
+	}
+
+	private String[] processTime(String time) {
+		String start_time = time.substring(0, time.indexOf("-"));
+		String end_time = time.substring(time.indexOf("-") + 1, time.length() - 2);
+		if (time.substring(time.length() - 2).contains("p")) {
+			int start_h = Integer.parseInt(start_time.substring(0, start_time.indexOf(":")));
+			int end_h = Integer.parseInt(end_time.substring(0, end_time.indexOf(":")));
+			if ( start_h <= end_h && end_h != 12 ) {
+				start_time =  (start_h + 12) + start_time.substring(start_time.indexOf(":"));
+			}
+			if ( end_h != 12) {
+				end_time =  (end_h + 12) + end_time.substring(end_time.indexOf(":"));
+			}
+		}
+		return new String[] {start_time, end_time};
+	}
+
+	private String getInnerHTMLByClassName(String line, String className) {
+		String startLocation = "<td class=\"" + className + "\">";
+		line = line.substring(line.indexOf(startLocation));
+		line = line.substring(0, line.indexOf("</td"));
+		return line.substring(line.indexOf(">"));
 	}
 
 	private String processDays(String days) {
