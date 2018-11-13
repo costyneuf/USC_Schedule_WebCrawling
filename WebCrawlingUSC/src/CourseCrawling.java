@@ -13,11 +13,13 @@ public class CourseCrawling {
 	private static final int TIMEOUT = 2000000, SLEEPTIME = 10;
 	private List<String> courseLinks, names, schools;
 	private String currentSchool = "";
+	private DatabaseHandler dbh;
 	
 	public CourseCrawling() {
 		courseLinks = new ArrayList<>();
 		names = new ArrayList<>();
 		schools = new ArrayList<>();
+		dbh = DatabaseHandler.getOneInstance();
 	}
 	
 	/**
@@ -26,8 +28,14 @@ public class CourseCrawling {
 	 * @param url
 	 */
 	public void start(String url, String building) {
-		JDBCDriver.connect();
+		
+		// Connect to DB
+		dbh.connect();
+		
+		// Update building table
 		crawlBuildingJS(building);
+		
+		// Update course table
 		crawlTermPage(url);
 		while (!courseLinks.isEmpty()) {
 			String link = courseLinks.remove(0); // Course page link
@@ -36,7 +44,9 @@ public class CourseCrawling {
 			System.out.println("\tStart processing: " + link + "\t" + name);		
 			crawlCoursePage(link, name, school);
 		}
-		JDBCDriver.close();
+		
+		// Close DB connection
+		dbh.close();
 	} 
 	
 	private void crawlBuildingJS(String link) {
@@ -45,6 +55,7 @@ public class CourseCrawling {
 			if (reader != null) {
 				System.out.println("Adding buildings ...");
 				String line  = reader.readLine();
+				
 				// Process building info.
 				String startLocation = "\"code\":";
 				while (line.contains(startLocation)) {
@@ -54,19 +65,15 @@ public class CourseCrawling {
 					} else {
 						// Get a new string line and update the original line.
 						line = line.substring(line.indexOf(startLocation) + (new String("\"code\":")).length());
-						
-						/*
-						 * Get [String ID, fullName, address;
-						 *		float longitude, latitude;]
-						 */
+											
+						// Get [String ID, fullName, address; float longitude, latitude;] 
 						String id = line.substring(line.indexOf("\"") + 1,
-								line.indexOf("\","));
+								line.indexOf("\","));					
+						String fullName = line.substring(line.indexOf("\"name\":\"") + (new String("\"name\":\"")).length(),
+								line.indexOf("\",\"short\":\""));
+						String address = line.substring(line.indexOf("\"address\":\"") + (new String("\"address\":\"")).length(),
+								line.indexOf("\",\"accessMap\":\""));
 						// Check whether it is a building
-						
-							String fullName = line.substring(line.indexOf("\"name\":\"") + (new String("\"name\":\"")).length(),
-									line.indexOf("\",\"short\":\""));
-							String address = line.substring(line.indexOf("\"address\":\"") + (new String("\"address\":\"")).length(),
-									line.indexOf("\",\"accessMap\":\""));
 						if (id.length() == 3) {
 							float longitude = Float.parseFloat(line.substring(
 										line.indexOf("\"longitude\":\"") + (new String("\"longitude\":\"")).length(),
@@ -76,13 +83,12 @@ public class CourseCrawling {
 									line.indexOf("\"latitude\":\"") + (new String("\"latitude\":\"")).length(),
 									line.indexOf("\",\"longitude\":\"")
 								));
-							JDBCDriver.addBuilding(new BuildingCandidate(id, fullName, address, longitude, latitude));
-							// System.out.println(id);
+							dbh.addBuilding(new BuildingCandidate(id, fullName, address, longitude, latitude));
 						}
 					}
 				}
 				// Add TBA
-				JDBCDriver.addBuilding(new BuildingCandidate("TBA", "TBA", "TBA"));
+				dbh.addBuilding(new BuildingCandidate("TBA", "TBA", "TBA"));
 				System.out.println("Finish adding buildings!");
 				
 			}
@@ -134,6 +140,7 @@ public class CourseCrawling {
 			e.printStackTrace();
 		}
 
+		// TODO: Add multi-threading here.
 		try {
 			Thread.sleep(SLEEPTIME);
 		} catch (InterruptedException e) {
@@ -203,7 +210,7 @@ public class CourseCrawling {
 		// Write data into DB
 		System.out.println("\t\t\t\tWriting data into DB for course sections...");
 		for (int i = 0; i < lectures.size(); i++) {
-			JDBCDriver.addSection(lectures.get(i));
+			dbh.addSection(lectures.get(i));
 		}
 		for (int i = 0; i < sections.size(); i++) {
 			Section section = sections.get(i);
@@ -211,7 +218,7 @@ public class CourseCrawling {
 				for (int j = 0; j < lectureSection_IDs.size(); j++)
 					section.setLectureSection_ID(lectureSection_IDs.get(j));
 			}
-			JDBCDriver.addSection(section);
+			dbh.addSection(section);
 		}
 		
 	}
@@ -296,9 +303,9 @@ public class CourseCrawling {
 		course.setDescription(description);
 		
 		// Insert into database
-		JDBCDriver.addCourse(course);
+		dbh.addCourse(course);
 		
-		return JDBCDriver.getCourseId(course);
+		return dbh.getCourseId(course);
 	}
 
 	/**
