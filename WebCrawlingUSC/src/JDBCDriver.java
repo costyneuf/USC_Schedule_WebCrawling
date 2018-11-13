@@ -64,7 +64,6 @@ public class JDBCDriver {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(sql);
-			System.exit(3);
 		}
 	}
 
@@ -106,7 +105,6 @@ public class JDBCDriver {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(sql);
-			System.exit(2);
 		}
 	}
 
