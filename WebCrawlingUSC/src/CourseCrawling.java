@@ -166,6 +166,7 @@ public class CourseCrawling {
 		System.out.println("Requesting data for course sections...");
 		String startLocation = "<tr data-section-id=", endLocation = "</tr>";
 		List<SectionCandidate> sections = new ArrayList<>();
+		List<SectionCandidate> lectures = new ArrayList<>();
 		// Assume all labs, discussions, and quizzes can be binded with all lectures.
 		List<String> lectureSection_IDs = new ArrayList<>();
 		while (line.contains(startLocation)) {
@@ -184,20 +185,26 @@ public class CourseCrawling {
 			String classCapacityString = getInnerHTMLByClassName(tmp, "registered");
 			classCapacityString = classCapacityString.substring(classCapacityString.indexOf("of ") + 3);
 			classCapacityString = classCapacityString.substring(0, classCapacityString.indexOf("<"));
-			int classCapacity = Integer.parseInt(classCapacityString);
+			int classCapacity = classCapacityString.contains(":") || classCapacityString.contains(" ") ? 0 : Integer.parseInt(classCapacityString);
 			String building_ID = tmp.contains("\"map\"") ? getInnerHTMLByClassName(tmp, "map").substring(0,3) : "TBA";
-			// Add a new section object
+			
 			SectionCandidate section = new SectionCandidate(sectionID, type, times[0], times[1], days,
 					instructor, building_ID, classCapacity, courseID);
-			sections.add(section);
 			// Add lecture id
 			if (section.isLecture()) {
+				lectures.add(section);
 				lectureSection_IDs.add(sectionID);
+			} else {
+				// Add a new section object
+				sections.add(section);
 			}
 		}
 		
 		// Write data into DB
 		System.out.println("Writing data into DB for course sections...");
+		for (int i = 0; i < lectures.size(); i++) {
+			JDBCDriver.addSection(lectures.get(i));
+		}
 		for (int i = 0; i < sections.size(); i++) {
 			SectionCandidate section = sections.get(i);
 			if (!section.isLecture()) {
@@ -236,11 +243,11 @@ public class CourseCrawling {
 	}
 
 	private String getInnerHTMLByClassName(String line, String className) {
-		System.out.print("Processing " + className + ":\t");
+		// System.out.print("Processing " + className + ":\t");
 		String startLocation = "class=\"" + className + "\">";
 		line = line.substring(line.indexOf(startLocation));
 		line = line.substring(0, line.indexOf("</td"));
-		System.out.println(line.substring(line.indexOf(">") + 1));
+		// System.out.println(line.substring(line.indexOf(">") + 1));
 		
 		return line.substring(line.indexOf(">") + 1);
 		
