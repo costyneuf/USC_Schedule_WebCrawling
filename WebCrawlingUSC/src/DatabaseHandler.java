@@ -62,7 +62,7 @@ public class DatabaseHandler {
 		}
 	}
 
-	public void addCourse(CourseCandidate course) {
+	public void addCourse(Course course) {
 		if (conn == null)
 			return;
 		String sql = "";
@@ -127,7 +127,7 @@ public class DatabaseHandler {
 	 * @param course
 	 * @return either a positive integer, or -1 if not existed, or -2 connection loss.
 	 */
-	public int getCourseId(CourseCandidate course) {
+	public int getCourseId(Course course) {
 		if (conn == null) return -2;
 		int ID = -1;
 		String sql = "";

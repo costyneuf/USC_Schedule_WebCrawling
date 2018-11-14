@@ -10,7 +10,7 @@
 	  PRIMARY KEY (`ID`))
  *
  */
-public class CourseCandidate {
+public class Course {
 	private String school, major, number, name, description;
 	private float units;
 	private int semester;
@@ -19,7 +19,7 @@ public class CourseCandidate {
 	
 	private static final int DEFAULT_SEMESTER = 1;
 
-	public CourseCandidate(String school, String major) {
+	public Course(String school, String major) {
 		if (school.contains(" ")) school = school.substring(0, school.indexOf(" "));
 		this.school = school;
 		if (major.length() > MAX_MAJOR) major = major.substring(0, MAX_MAJOR);
@@ -107,7 +107,7 @@ public class CourseCandidate {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CourseCandidate other = (CourseCandidate) obj;
+		Course other = (Course) obj;
 		if (description == null) {
 			if (other.description != null)
 				return false;
